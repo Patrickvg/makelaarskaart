@@ -5,11 +5,6 @@ from models.Reorganize import get_data_set_from_mapbox, delete_feature, add_feat
 from models.Locations import add_lng_lat_data
 
 
-dataset_constructor_mapbox = Datasets(access_token=Config.mapbox_token)
-active_realtor_data = get_sheet_data()
-clean_realtor_data = clean(active_realtor_data)
-
-
 def dataset_choice(branche):
     if branche == 'NVM':
         return Config.dataset_NVM
@@ -67,9 +62,13 @@ def remove_mapbox(dataset_realtor, mapbox_data):
                  "{} \n".format(branches, set_to_remove, removed))
 
 
-# build loop for all 4 branches
-for branches in list(set(active_realtor_data.Branche))[1:]:
-    realtor_data = clean_realtor_data[clean_realtor_data['Branche'] == branches]
-    mapbox_dataset = get_data_set_from_mapbox(dataset_choice(branche=branches), dataset_constructor_mapbox)
-    update_mapbox(realtor_data, mapbox_dataset)
-    remove_mapbox(realtor_data, mapbox_dataset)
+if __name__ == "__main__":
+    dataset_constructor_mapbox = Datasets(access_token=Config.mapbox_token)
+    active_realtor_data = get_sheet_data()
+    clean_realtor_data = clean(active_realtor_data)
+
+    for branches in list(set(active_realtor_data.Branche))[1:]:
+        realtor_data = clean_realtor_data[clean_realtor_data['Branche'] == branches]
+        mapbox_dataset = get_data_set_from_mapbox(dataset_choice(branche=branches), dataset_constructor_mapbox)
+        update_mapbox(realtor_data, mapbox_dataset)
+        remove_mapbox(realtor_data, mapbox_dataset)
