@@ -34,11 +34,6 @@ def get_sheet_data():
 def clean(dataset):
     dataset.rename(index=str, columns={'Huisnr.': 'Huisnummer'}, inplace=True)
     dataset_ka_online = dataset[(dataset['KA gekoppeld'] == '✓ Directe XML (niet via KA)') | (dataset['KA gekoppeld'] == '✓')]
-    dataset_ka_online.drop(['Provincie', 'Contactpersoon', 'Emailadres', 'KA',
-                            'Datum akkoord', 'Maand akkoord', 'Zelf aangemeld?', 'Bron',
-                            'Accountmanager Auto-fill', 'Gekoppeld door', 'KA gekoppeld',
-                            'Aanbod online', 'Huislijn uitgesloten', 'Uitbehandeld RB',
-                            'Agent Pages status', 'Akkoord AV', 'RB contactmoment',
-                            'Linkje gevraagd?', 'Linkjes actief', 'Datum link online',
-                            'Link vermelding', 'Link bestemming', 'OPMERKINGEN'], inplace=True, axis=1)
+    dataset_ka_online = dataset_ka_online[['index','Casco ID', 'Makelaarsnaam', 'Plaats', 'Postcode', 'Huisnummer', 'Branche']]
+
     return dataset_ka_online

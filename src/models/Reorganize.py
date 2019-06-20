@@ -14,12 +14,11 @@ def get_data_set_from_mapbox(dataset_id, mapbox_dataset):
     return df
 
 
-def add_feature(dataset_id, row_id, name, branche, lat, lng, mapbox_dataset):
+def add_feature(dataset_id, row_id,index, name, branche, lat, lng, mapbox_dataset):
     feature = {
-        'type': 'Feature', 'id': row_id, 'properties': {'Makelaarsnaam': name, 'Branche': branche,
-                                                        'coordinates': [lng, lat]},
+        'type': 'Feature', 'id': row_id, 'properties': {'index': index,'Casco_id':row_id,'Makelaarsnaam': name, 'Branche': branche},
         'geometry': {'type': 'Point', 'coordinates': [lng, lat]}}
-    resp = mapbox_dataset.update_feature(dataset_id, id, feature)
+    resp = mapbox_dataset.update_feature(dataset_id, row_id, feature)
     return resp.status_code
 
 

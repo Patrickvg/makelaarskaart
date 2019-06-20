@@ -28,22 +28,25 @@ def update_mapbox(dataset_realtor, mapbox_data):
     set_to_add.drop(['Plaats', 'Postcode', 'Huisnummer', 'index'], inplace=True, axis=1)
     set_to_add.rename(index=str, columns={'Casco ID': 'Casco_id'}, inplace=True)
     # clean dataframe to comply to mapbox standard
-    added = list(map(lambda name, branche, row_id, lat, lng:
+    added = list(map(lambda index,name,branche, row_id, lat, lng:
                      add_feature(dataset_id=dataset_choice(branche=branche),
+                                 index=index,
                                  name=name,
                                  row_id=str(row_id),
                                  branche=branche,
                                  lat=lat,
                                  lng=lng,
                                  mapbox_dataset=dataset_constructor_mapbox),
+                     set_to_add.index.values,
                      set_to_add['Makelaarsnaam'],
                      set_to_add['Branche'],
                      set_to_add['Casco_id'],
                      set_to_add['lat'],
                      set_to_add['lng']))
-    return print("adding to {}: \n"
+    return added
+    '''return print("adding to {}: \n"
                  "{} \n"
-                 "{} \n".format(branches, set_to_add, added))
+                 "{} \n".format(branches, set_to_add, added))'''
 # add new features to dataset of mapbox
 
 
@@ -67,7 +70,7 @@ if __name__ == "__main__":
     active_realtor_data = get_sheet_data()
     clean_realtor_data = clean(active_realtor_data)
 
-    for branches in list(set(active_realtor_data.Branche))[1:]:
+    for branches in list(set(active_realtor_data.Branche))[0:]:
         realtor_data = clean_realtor_data[clean_realtor_data['Branche'] == branches]
         mapbox_dataset = get_data_set_from_mapbox(dataset_choice(branche=branches), dataset_constructor_mapbox)
         update_mapbox(realtor_data, mapbox_dataset)
