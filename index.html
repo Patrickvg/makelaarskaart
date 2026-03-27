@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8' />
+  <title>Antwerp Spots</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.49.0/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.49.0/mapbox-gl.css' rel='stylesheet' />
+  <style>
+    body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+
+    #legend {
+      position: absolute;
+      bottom: 30px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      padding: 12px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1;
+      font-size: 13px;
+    }
+    #legend h4 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #333;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      margin-right: 8px;
+      border: 2px solid rgba(0,0,0,0.2);
+      flex-shrink: 0;
+    }
+    .legend-label { color: #444; }
+
+    .mapboxgl-popup-content {
+      border-radius: 8px;
+      padding: 12px 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+      min-width: 160px;
+    }
+    .mapboxgl-popup-content h3 {
+      margin: 0 0 4px 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #222;
+    }
+    .mapboxgl-popup-content .address {
+      margin: 0 0 4px 0;
+      font-size: 12px;
+      color: #666;
+    }
+    .mapboxgl-popup-content .type-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .type-coffee { background: #FFF0E0; color: #C06000; }
+    .type-bar    { background: #F0E8FF; color: #6A0DAD; }
+    .type-bakery { background: #E8F5E9; color: #2E7D32; }
+  </style>
+</head>
+<body>
+<div id='map'></div>
+
+<div id='legend'>
+  <h4>Antwerp Spots</h4>
+  <div class='legend-item'>
+    <div class='legend-dot' style='background:#E07B00;'></div>
+    <span class='legend-label'>Coffee</span>
+  </div>
+  <div class='legend-item'>
+    <div class='legend-dot' style='background:#7B2D8B;'></div>
+    <span class='legend-label'>Bar / Bottle Shop</span>
+  </div>
+  <div class='legend-item'>
+    <div class='legend-dot' style='background:#3A7D44;'></div>
+    <span class='legend-label'>Bakery</span>
+  </div>
+</div>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoicHZnZWxkZXIiLCJhIjoiY2o5ODcwZmg3MGs4dTMzcXlkNGZwc2FoNSJ9.dWRMDf1PnBjlvoMynZe-7w';
+
+var spots = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      properties: { name: 'Daily Dose', address: 'Emiel Banningstraat 58', type: 'coffee', color: '#E07B00' },
+      geometry: { type: 'Point', coordinates: [4.4181, 51.2038] }
+    },
+    {
+      type: 'Feature',
+      properties: { name: 'The Prep Kitchen', address: 'Begijnenstraat 23', type: 'coffee', color: '#E07B00' },
+      geometry: { type: 'Point', coordinates: [4.3962, 51.2212] }
+    },
+    {
+      type: 'Feature',
+      properties: { name: 'Shorty Coffee', address: 'Groendalstraat 8', type: 'coffee', color: '#E07B00' },
+      geometry: { type: 'Point', coordinates: [4.3992, 51.2178] }
+    },
+    {
+      type: 'Feature',
+      properties: { name: 'Butchers Coffee', address: 'Kasteelstraat 57', type: 'coffee', color: '#E07B00' },
+      geometry: { type: 'Point', coordinates: [4.3928, 51.2062] }
+    },
+    {
+      type: 'Feature',
+      properties: { name: 'Bar Bordell', address: 'Oudemanstraat 34', type: 'bar', color: '#7B2D8B' },
+      geometry: { type: 'Point', coordinates: [4.4002, 51.2278] }
+    },
+    {
+      type: 'Feature',
+      properties: { name: 'Amber Bottle Shop', address: 'Schermersstraat 25', type: 'bar', color: '#7B2D8B' },
+      geometry: { type: 'Point', coordinates: [4.4058, 51.2185] }
+    },
+    {
+      type: 'Feature',
+      properties: { name: 'Bakkerij Funk', address: 'Kronenburgstraat 41A', type: 'bakery', color: '#3A7D44' },
+      geometry: { type: 'Point', coordinates: [4.3958, 51.2098] }
+    }
+  ]
+};
+
+var map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/streets-v10',
+  center: [4.4051, 51.2134],
+  zoom: 13.2
+});
+
+map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+map.on('load', function () {
+  spots.features.forEach(function (feature) {
+    var el = document.createElement('div');
+    el.style.width = '18px';
+    el.style.height = '18px';
+    el.style.borderRadius = '50%';
+    el.style.background = feature.properties.color;
+    el.style.border = '3px solid white';
+    el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.35)';
+    el.style.cursor = 'pointer';
+
+    var typeClass = 'type-' + feature.properties.type;
+    var popup = new mapboxgl.Popup({ offset: 14, closeButton: false })
+      .setHTML(
+        '<h3>' + feature.properties.name + '</h3>' +
+        '<p class="address">' + feature.properties.address + ', Antwerp</p>' +
+        '<span class="type-badge ' + typeClass + '">' +
+          (feature.properties.type === 'coffee' ? 'Coffee' :
+           feature.properties.type === 'bar' ? 'Bar / Bottle Shop' : 'Bakery') +
+        '</span>'
+      );
+
+    new mapboxgl.Marker(el)
+      .setLngLat(feature.geometry.coordinates)
+      .setPopup(popup)
+      .addTo(map);
+  });
+});
+</script>
+</body>
+</html>
