@@ -31,23 +31,10 @@
     .type-coffee { background: #FFF0E0; color: #C06000; }
     .type-bar    { background: #F0E8FF; color: #6A0DAD; }
     .type-bakery { background: #E8F5E9; color: #2E7D32; }
-    #loading {
-      position: absolute;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      z-index: 1001;
-    }
   </style>
 </head>
 <body>
 <div id='map'></div>
-<div id='loading'>Locaties laden…</div>
 <div id='legend'>
   <h4>Antwerp Spots</h4>
   <div class='legend-item'><div class='legend-dot' style='background:#E07B00'></div><span class='legend-label'>Coffee</span></div>
@@ -55,9 +42,6 @@
   <div class='legend-item'><div class='legend-dot' style='background:#3A7D44'></div><span class='legend-label'>Bakery</span></div>
 </div>
 <script>
-var MAPBOX_TOKEN = 'pk.eyJ1IjoicHZnZWxkZXIiLCJhIjoiY2o5ODcwZmg3MGs4dTMzcXlkNGZwc2FoNSJ9.dWRMDf1PnBjlvoMynZe-7w';
-var CACHE_KEY = 'antwerp_spots_v2';
-
 var map = L.map('map').setView([51.213, 4.400], 14);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -65,71 +49,30 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 var spots = [
-  { name: 'Daily Dose',        address: 'Emiel Banningstraat 58, Antwerpen', type: 'coffee',  color: '#E07B00' },
-  { name: 'The Prep Kitchen',  address: 'Begijnenstraat 23, Antwerpen',       type: 'coffee',  color: '#E07B00' },
-  { name: 'Shorty Coffee',     address: 'Groendalstraat 8, Antwerpen',        type: 'coffee',  color: '#E07B00' },
-  { name: 'Butchers Coffee',   address: 'Kasteelstraat 57, Antwerpen',        type: 'coffee',  color: '#E07B00' },
-  { name: 'Bar Bordell',       address: 'Oudemanstraat 34, Antwerpen',        type: 'bar',     color: '#7B2D8B' },
-  { name: 'Amber Bottle Shop', address: 'Schermersstraat 25, Antwerpen',      type: 'bar',     color: '#7B2D8B' },
-  { name: 'Bakkerij Funk',     address: 'Kronenburgstraat 41, Antwerpen',     type: 'bakery',  color: '#3A7D44' }
+  { name: 'Daily Dose',        address: 'Emiel Banningstraat 58', type: 'coffee',  color: '#E07B00', lat: 51.2051, lng: 4.3889 },
+  { name: 'The Prep Kitchen',  address: 'Begijnenstraat 23',       type: 'coffee',  color: '#E07B00', lat: 51.2150, lng: 4.4120 },
+  { name: 'Shorty Coffee',     address: 'Groendalstraat 8',        type: 'coffee',  color: '#E07B00', lat: 51.2190, lng: 4.4000 },
+  { name: 'Butchers Coffee',   address: 'Kasteelstraat 57',        type: 'coffee',  color: '#E07B00', lat: 51.2062, lng: 4.3928 },
+  { name: 'Bar Bordell',       address: 'Oudemanstraat 34',        type: 'bar',     color: '#7B2D8B', lat: 51.2268, lng: 4.4012 },
+  { name: 'Amber Bottle Shop', address: 'Schermersstraat 25',      type: 'bar',     color: '#7B2D8B', lat: 51.2165, lng: 4.4110 },
+  { name: 'Bakkerij Funk',     address: 'Kronenburgstraat 41A',    type: 'bakery',  color: '#3A7D44', lat: 51.2098, lng: 4.3960 }
 ];
 
 var typeLabel = { coffee: 'Coffee', bar: 'Bar / Bottle Shop', bakery: 'Bakery' };
 
-function makeIcon(color) {
-  return L.divIcon({
+spots.forEach(function(s) {
+  var icon = L.divIcon({
     className: '',
-    html: '<div style="width:16px;height:16px;border-radius:50%;background:' + color + ';border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>',
+    html: '<div style="width:16px;height:16px;border-radius:50%;background:' + s.color + ';border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>',
     iconSize: [16, 16], iconAnchor: [8, 8], popupAnchor: [0, -12]
   });
-}
-
-function addMarker(spot, lat, lng) {
-  L.marker([lat, lng], { icon: makeIcon(spot.color) })
+  L.marker([s.lat, s.lng], { icon: icon })
     .bindPopup(
-      '<p class="popup-name">' + spot.name + '</p>' +
-      '<p class="popup-address">' + spot.address + '</p>' +
-      '<span class="type-badge type-' + spot.type + '">' + typeLabel[spot.type] + '</span>'
+      '<p class="popup-name">' + s.name + '</p>' +
+      '<p class="popup-address">' + s.address + ', Antwerpen</p>' +
+      '<span class="type-badge type-' + s.type + '">' + typeLabel[s.type] + '</span>'
     ).addTo(map);
-}
-
-function geocodeMapbox(spot) {
-  var q = encodeURIComponent(spot.address + ', Belgium');
-  var url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + q +
-    '.json?access_token=' + MAPBOX_TOKEN + '&country=BE&limit=1';
-  return fetch(url)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.features && data.features.length) {
-        var coords = data.features[0].center;
-        return { name: spot.name, lat: coords[1], lng: coords[0] };
-      }
-      return null;
-    });
-}
-
-var cached = null;
-try { cached = JSON.parse(localStorage.getItem(CACHE_KEY)); } catch(e) {}
-
-if (cached && cached.length === spots.length) {
-  document.getElementById('loading').style.display = 'none';
-  cached.forEach(function(c) {
-    var spot = spots.find(function(s) { return s.name === c.name; });
-    if (spot) addMarker(spot, c.lat, c.lng);
-  });
-} else {
-  Promise.all(spots.map(geocodeMapbox)).then(function(results) {
-    var valid = results.filter(Boolean);
-    valid.forEach(function(c) {
-      var spot = spots.find(function(s) { return s.name === c.name; });
-      if (spot) addMarker(spot, c.lat, c.lng);
-    });
-    document.getElementById('loading').style.display = 'none';
-    if (valid.length) {
-      try { localStorage.setItem(CACHE_KEY, JSON.stringify(valid)); } catch(e) {}
-    }
-  });
-}
+});
 </script>
 </body>
 </html>
