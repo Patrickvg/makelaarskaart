@@ -10,7 +10,6 @@
     * { box-sizing: border-box; }
     body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; }
     #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-
     #legend {
       position: absolute;
       bottom: 30px;
@@ -26,7 +25,6 @@
     .legend-item { display: flex; align-items: center; margin-bottom: 6px; }
     .legend-dot { width: 14px; height: 14px; border-radius: 50%; margin-right: 8px; border: 2px solid rgba(0,0,0,0.15); flex-shrink: 0; }
     .legend-label { color: #444; }
-
     .popup-name { margin: 0 0 3px 0; font-size: 15px; font-weight: 700; color: #222; }
     .popup-address { margin: 0 0 6px 0; font-size: 12px; color: #666; }
     .type-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
@@ -44,41 +42,58 @@
   <div class='legend-item'><div class='legend-dot' style='background:#3A7D44'></div><span class='legend-label'>Bakery</span></div>
 </div>
 <script>
-var map = L.map('map').setView([51.2134, 4.4051], 13);
-
+var map = L.map('map').setView([51.213, 4.400], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   maxZoom: 19
 }).addTo(map);
 
 var spots = [
-  { name: 'Daily Dose',        address: 'Emiel Banningstraat 58', type: 'coffee',  color: '#E07B00', latlng: [51.2038, 4.4181] },
-  { name: 'The Prep Kitchen',  address: 'Begijnenstraat 23',       type: 'coffee',  color: '#E07B00', latlng: [51.2212, 4.3962] },
-  { name: 'Shorty Coffee',     address: 'Groendalstraat 8',        type: 'coffee',  color: '#E07B00', latlng: [51.2178, 4.3992] },
-  { name: 'Butchers Coffee',   address: 'Kasteelstraat 57',        type: 'coffee',  color: '#E07B00', latlng: [51.2062, 4.3928] },
-  { name: 'Bar Bordell',       address: 'Oudemanstraat 34',        type: 'bar',     color: '#7B2D8B', latlng: [51.2278, 4.4002] },
-  { name: 'Amber Bottle Shop', address: 'Schermersstraat 25',      type: 'bar',     color: '#7B2D8B', latlng: [51.2185, 4.4058] },
-  { name: 'Bakkerij Funk',     address: 'Kronenburgstraat 41A',    type: 'bakery',  color: '#3A7D44', latlng: [51.2098, 4.3958] }
+  { name: 'Daily Dose',        address: 'Emiel Banningstraat 58, Antwerp', type: 'coffee',  color: '#E07B00' },
+  { name: 'The Prep Kitchen',  address: 'Begijnenstraat 23, Antwerp',       type: 'coffee',  color: '#E07B00' },
+  { name: 'Shorty Coffee',     address: 'Groendalstraat 8, Antwerp',        type: 'coffee',  color: '#E07B00' },
+  { name: 'Butchers Coffee',   address: 'Kasteelstraat 57, Antwerp',        type: 'coffee',  color: '#E07B00' },
+  { name: 'Bar Bordell',       address: 'Oudemanstraat 34, Antwerp',        type: 'bar',     color: '#7B2D8B' },
+  { name: 'Amber Bottle Shop', address: 'Schermersstraat 25, Antwerp',      type: 'bar',     color: '#7B2D8B' },
+  { name: 'Bakkerij Funk',     address: 'Kronenburgstraat 41A, Antwerp',    type: 'bakery',  color: '#3A7D44' }
 ];
 
 var typeLabel = { coffee: 'Coffee', bar: 'Bar / Bottle Shop', bakery: 'Bakery' };
 
-spots.forEach(function(s) {
-  var icon = L.divIcon({
+function makeIcon(color) {
+  return L.divIcon({
     className: '',
-    html: '<div style="width:16px;height:16px;border-radius:50%;background:' + s.color + ';border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>',
+    html: '<div style="width:16px;height:16px;border-radius:50%;background:' + color + ';border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>',
     iconSize: [16, 16],
     iconAnchor: [8, 8],
-    popupAnchor: [0, -10]
+    popupAnchor: [0, -12]
   });
+}
 
-  L.marker(s.latlng, { icon: icon })
-    .bindPopup(
-      '<p class="popup-name">' + s.name + '</p>' +
-      '<p class="popup-address">' + s.address + ', Antwerp</p>' +
-      '<span class="type-badge type-' + s.type + '">' + typeLabel[s.type] + '</span>'
-    )
-    .addTo(map);
+function geocodeAndAdd(spot, delay) {
+  setTimeout(function() {
+    var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(spot.address + ', Belgium');
+    fetch(url, { headers: { 'Accept-Language': 'en' } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.length) return;
+        var lat = parseFloat(data[0].lat);
+        var lng = parseFloat(data[0].lon);
+        L.marker([lat, lng], { icon: makeIcon(spot.color) })
+          .bindPopup(
+            '<p class="popup-name">' + spot.name + '</p>' +
+            '<p class="popup-address">' + spot.address + '</p>' +
+            '<span class="type-badge type-' + spot.type + '">' + typeLabel[spot.type] + '</span>'
+          )
+          .addTo(map);
+      })
+      .catch(function(e) { console.warn('Geocoding failed for', spot.name, e); });
+  }, delay);
+}
+
+// Stagger requests by 1s each to respect Nominatim rate limit (1 req/sec)
+spots.forEach(function(spot, i) {
+  geocodeAndAdd(spot, i * 1100);
 });
 </script>
 </body>
