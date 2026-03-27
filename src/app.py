@@ -10,5 +10,10 @@ def index():
         'index.html')
 
 
+@app.route('/antwerp')
+def antwerp():
+    return render_template('antwerp.html')
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=7000)
